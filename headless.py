@@ -54,7 +54,8 @@ else:
         request = request.urlopen(url)
     except urllib.error.HTTPError as e:
         request = e
-    print('Redirected to ' + Fore.BLUE + request.geturl() + Fore.RESET)
+    if request.geturl() != url:
+        print('Redirected to ' + Fore.BLUE + request.geturl() + Fore.RESET)
     print('Response code: ' + str(request.getcode()))
 
 # security headers list
