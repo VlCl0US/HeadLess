@@ -1,5 +1,5 @@
 # HeadLess
-![изображение](https://github.com/VlCl0US/HeadLess/assets/146950743/3414f52b-a539-4d1c-98ad-ea7131c3560b)
+![изображение](https://github.com/VlCl0US/HeadLess/assets/146950743/1cfe07f0-e170-4d3f-aa1e-adbfa01886c3)
 
 Security headers testing tool ~ Version 1.0
 
