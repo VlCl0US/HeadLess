@@ -1,6 +1,5 @@
-import urllib.request
 import argparse
-from urllib import request
+from urllib import request, error
 from colorama import Fore
 
 # read user's arguments
@@ -28,7 +27,12 @@ if args.invisible == False:
 Security headers testing tool
           ''')
 
-url = args.url
+# Fix input URL
+if args.url != None:
+    url = args.url
+else:
+    print(Fore.RED + 'no URL found.' + Fore.RESET)
+    exit()
 if not url.startswith('http://') and not url.startswith('https://'):
     url = 'http://' + url
 print('Connecting to ' + Fore.BLUE + url + Fore.RESET)
@@ -45,18 +49,19 @@ if args.disable_redirects == True:
 
     try:
         request = request.urlopen(url)
-    except urllib.error.HTTPError as e:
-        request = e
-    print('Response code: ' + str(request.getcode()))
-
+    except error.URLError as e:
+        print(Fore.RED + 'connection error' + Fore.RESET)
+        exit()
 else:
     try:
         request = request.urlopen(url)
-    except urllib.error.HTTPError as e:
-        request = e
+    except error.URLError as e:
+        print(Fore.RED + 'connection error' + Fore.RESET)
+        exit()
     if request.geturl() != url:
         print('Redirected to ' + Fore.BLUE + request.geturl() + Fore.RESET)
-    print('Response code: ' + str(request.getcode()))
+
+print('Response code: ' + str(request.getcode()))
 
 # security headers list
 security_headers = ["X-Frame-Options" , "Strict-Transport-Security" , 
