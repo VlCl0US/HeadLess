@@ -10,6 +10,7 @@ parser.add_argument("-c" , "--check" , action = 'store_true' , help = "Simple se
 parser.add_argument("-f" , "--full" , action = 'store_true' , help = "Security headers check with full value")
 parser.add_argument("-a" , "--all_headers" , action = 'store_true' , help = "Show all headers")
 parser.add_argument("-d" , "--disable_redirects" , action = 'store_true' , help = "Disable redirects")
+parser.add_argument("-x" , "--cors_check" , action = 'store_true' , help = "Cross origin resource sharing check with full value")
 
 args = parser.parse_args()
 
@@ -27,48 +28,28 @@ if args.invisible == False:
 Security headers testing tool
           ''')
 
-# Fix input URL
-if args.url != None:
-    url = args.url
-else:
-    print(Fore.RED + 'no URL found.' + Fore.RESET)
-    exit()
-if not url.startswith('http://') and not url.startswith('https://'):
-    url = 'http://' + url
-print('Connecting to ' + Fore.BLUE + url + Fore.RESET)
-
-# get response from target
-class NoRedirect(request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None
-
-if args.disable_redirects == True:
-    print('Redirection disabled')
-    opener = request.build_opener(NoRedirect)
-    request.install_opener(opener)
-
-    try:
-        request = request.urlopen(url)
-    except error.URLError as e:
-        print(Fore.RED + 'connection error' + Fore.RESET)
-        exit()
-else:
-    try:
-        request = request.urlopen(url)
-    except error.URLError as e:
-        print(Fore.RED + 'connection error' + Fore.RESET)
-        exit()
-    if request.geturl() != url:
-        print('Redirected to ' + Fore.BLUE + request.geturl() + Fore.RESET)
-
-print('Response code: ' + str(request.getcode()))
-
 # security headers list
 security_headers = ["X-Frame-Options" , "Strict-Transport-Security" , 
                     "Permissions-Policy" ,"Content-Security-Policy" , 
                     "X-Content-Type-Options" , "Referrer-Policy"]
 
-class main:    
+# CORS headers list
+cors_headers = ["Access-Control-Allow-Origin" , "Access-Control-Allow-Credentials" , 
+                "Access-Control-Allow-Headers" , "Access-Control-Allow-Methods" , 
+                "Access-Control-Expose-Headers" , "Access-Control-Max-Age" , 
+                "Access-Control-Request-Headers" , "Access-Control-Request-Method" , 
+                "Origin"]
+
+class main:          
+    # fix input URL
+    def to_http():
+        if args.url == None:
+            print(Fore.RED + 'no URL found.' + Fore.RESET)
+            exit()
+        if not args.url.startswith('http://') and not args.url.startswith('https://'):
+            args.url = 'http://' + args.url
+        print('Connecting to ' + Fore.BLUE + args.url + Fore.RESET)
+    
     # output security headers and values
     def list_headers():
         print('''          
@@ -95,6 +76,49 @@ Value of security headers -''')
             else:
                 print(Fore.GREEN + header + Fore.RESET + ': ' + request.headers[header])
     
+    # output CORS headers
+    def cors_headers():
+        print('''
+Value of CORS headers -''')
+        for cors_header in cors_headers:
+            if request.headers[cors_header] == None:
+                print(Fore.RED + cors_header + Fore.RESET + ': ' + 'EMPTY')
+            else:
+                print(Fore.GREEN + cors_header + Fore.RESET + ': ' + request.headers[cors_header])
+
+# disable redirects
+class NoRedirect(request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+# get target
+main.to_http()
+
+# get response from target
+if args.disable_redirects == True:
+    print('Redirection disabled')
+    opener = request.build_opener(NoRedirect)
+    request.install_opener(opener)
+
+    try:
+        request = request.urlopen(args.url)
+    except error.HTTPError as e:
+        request = e
+    except error.URLError as e:
+        print(Fore.RED + 'connection error.' + Fore.RESET)
+        exit()
+    print('Response code: ' + str(request.getcode()))
+
+else:
+    try:
+        request = request.urlopen(args.url)
+    except error.HTTPError as e:
+        request = e
+    except error.URLError as e:
+        print(Fore.RED + 'connection error.' + Fore.RESET)
+        exit()
+    print('Redirected to ' + Fore.BLUE + request.geturl() + Fore.RESET)
+    print('Response code: ' + str(request.getcode()))
 
 # show all headers
 if args.all_headers == True:
@@ -107,3 +131,6 @@ if args.check == True and args.full != True:
 # show full values of security headers
 if args.full == True:
     main.security_headers_full()
+    
+if args.cors_check == True:
+    main.cors_headers()
